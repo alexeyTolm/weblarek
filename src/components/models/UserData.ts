@@ -1,13 +1,17 @@
 import { IBuyer,TPayment } from "../../types";
 
 export class UserData {
-  payment: TPayment | string = "";
-  address: string = "";
-  email: string = "";
-  phone: string = "";
-  formErrors: Partial<Record<keyof IBuyer, string>> = {};
+  private payment: TPayment | "" = "";
+  private address: string = "";
+  private email: string = "";
+  private phone: string = "";
 
-  constructor() {}
+  constructor() {
+    this.payment = "";
+    this.address = "";
+    this.email = "";
+    this.phone = "";
+  }
 
   setUserData(field: keyof IBuyer, value: string): void {
     if (field === "payment") {
@@ -15,7 +19,6 @@ export class UserData {
     } else {
       this[field] = value;
     }
-    this.validateUserData();
   }
 
   getUserData(): IBuyer {
@@ -32,18 +35,16 @@ export class UserData {
     this.address = "";
     this.email = "";
     this.phone = "";
-    this.formErrors = {};
   }
 
-  validateUserData(): boolean {
-    const errors: typeof this.formErrors = {};
+  validateUserData() {
+    const errors: Partial<Record<keyof IBuyer, string>> = {};
 
     if (!this.payment) errors.payment = "Не выбран вид оплаты";
     if (!this.address) errors.address = "Укажите адрес";
     if (!this.email) errors.email = "Укажите email";
     if (!this.phone) errors.phone = "Укажите телефон";
 
-    this.formErrors = errors;
-    return Object.keys(errors).length === 0;
+    return errors;
   }
 }
