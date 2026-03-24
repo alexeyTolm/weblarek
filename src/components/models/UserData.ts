@@ -1,4 +1,5 @@
 import { IBuyer,TPayment } from "../../types";
+import { TFormErrors } from "../../types";
 
 export class UserData {
   private payment: TPayment | "" = "";
@@ -6,16 +7,15 @@ export class UserData {
   private email: string = "";
   private phone: string = "";
 
-  constructor() {
-    this.payment = "";
-    this.address = "";
-    this.email = "";
-    this.phone = "";
-  }
+  constructor() {}
 
   setUserData(field: keyof IBuyer, value: string): void {
     if (field === "payment") {
-      this.payment = value as TPayment;
+      if (value === "online" || value === "offline") {
+        this.payment = value;
+      } else {
+        console.warn(`Попытка установить неверный тип оплаты: ${value}`);
+      }
     } else {
       this[field] = value;
     }
@@ -37,13 +37,21 @@ export class UserData {
     this.phone = "";
   }
 
-  validateUserData() {
-    const errors: Partial<Record<keyof IBuyer, string>> = {};
+  validateUserData(): TFormErrors {
+    const errors: TFormErrors = {};
 
-    if (!this.payment) errors.payment = "Не выбран вид оплаты";
-    if (!this.address) errors.address = "Укажите адрес";
-    if (!this.email) errors.email = "Укажите email";
-    if (!this.phone) errors.phone = "Укажите телефон";
+    if (!this.payment) {
+      errors.payment = "Не выбран вид оплаты";
+    }
+    if (!this.address) {
+      errors.address = "Необходимо указать адрес";
+    }
+    if (!this.email) {
+      errors.email = "Необходимо указать email";
+    }
+    if (!this.phone) {
+      errors.phone = "Необходимо указать телефон";
+    }
 
     return errors;
   }

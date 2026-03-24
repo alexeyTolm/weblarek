@@ -1,6 +1,6 @@
 import "./scss/styles.scss";
 import { AppApi } from "./components/AppApi";
-import { ProductData } from "./components/models/productData";
+import { ProductData } from "./components/models/ProductData";
 import { BasketData } from "./components/models/BasketData";
 import { UserData } from "./components/models/UserData";
 import { API_URL, CDN_URL } from "./utils/constants";

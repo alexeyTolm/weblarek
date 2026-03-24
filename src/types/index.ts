@@ -26,6 +26,8 @@ export interface IBuyer {
   address: string;
 }
 
+export type TFormErrors = Partial<Record<keyof IBuyer, string>>;
+
 export interface IProductResponse {
   total: number;
   items: IProduct[];
