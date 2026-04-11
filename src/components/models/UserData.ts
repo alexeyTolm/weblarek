@@ -1,24 +1,27 @@
-import { IBuyer,TPayment } from "../../types";
+import { IBuyer, TPayment } from "../../types";
 import { TFormErrors } from "../../types";
+import { IEvents } from "../base/Events";
 
 export class UserData {
   private payment: TPayment | "" = "";
   private address: string = "";
   private email: string = "";
   private phone: string = "";
+  protected events: IEvents;
 
-  constructor() {}
+  constructor(events: IEvents) {
+    this.events = events;
+  }
 
   setUserData(field: keyof IBuyer, value: string): void {
     if (field === "payment") {
       if (value === "online" || value === "offline") {
         this.payment = value;
-      } else {
-        console.warn(`Попытка установить неверный тип оплаты: ${value}`);
       }
     } else {
-      this[field] = value;
+      (this as any)[field] = value;
     }
+    this.events.emit("user:changed", this.getUserData());
   }
 
   getUserData(): IBuyer {
@@ -35,6 +38,7 @@ export class UserData {
     this.address = "";
     this.email = "";
     this.phone = "";
+    this.events.emit("user:changed", this.getUserData());
   }
 
   validateUserData(): TFormErrors {
