@@ -1,4 +1,5 @@
 import { FormBase } from "./base/FormBase";
+import { IEvents } from "../base/Events";
 
 export interface IOrderFormData {
   payment: string;
@@ -9,58 +10,56 @@ export class OrderForm extends FormBase<IOrderFormData> {
   protected _cardButton: HTMLButtonElement;
   protected _cashButton: HTMLButtonElement;
   protected _addressInput: HTMLInputElement;
+  protected events: IEvents;
 
-  constructor(container: HTMLFormElement) {
+  constructor(container: HTMLFormElement, events: IEvents) {
     super(container);
+    this.events = events;
     this._cardButton = container.querySelector('button[name="card"]')!;
     this._cashButton = container.querySelector('button[name="cash"]')!;
     this._addressInput = container.querySelector('input[name="address"]')!;
 
-    this._cardButton.addEventListener("click", () => this.setPayment("online"));
-    this._cashButton.addEventListener("click", () =>
-      this.setPayment("offline"),
-    );
-    this._addressInput.addEventListener("input", () => this.onInputChange());
+    this._cardButton.addEventListener("click", () => {
+      this.events.emit("order:paymentSelected", { payment: "online" });
+    });
+
+    this._cashButton.addEventListener("click", () => {
+      this.events.emit("order:paymentSelected", { payment: "offline" });
+    });
+
+    this._addressInput.addEventListener("input", () => {
+      this.events.emit("order:addressChanged", {
+        address: this._addressInput.value,
+      });
+    });
   }
 
-  protected setPayment(type: "online" | "offline") {
-    this._cardButton.classList.toggle("button_alt-active", type === "online");
-    this._cashButton.classList.toggle("button_alt-active", type === "offline");
-    this.emitChange();
+  set payment(value: string) {
+    if (value === "online") {
+      this._cardButton.classList.add("button_alt-active");
+      this._cashButton.classList.remove("button_alt-active");
+    } else if (value === "offline") {
+      this._cashButton.classList.add("button_alt-active");
+      this._cardButton.classList.remove("button_alt-active");
+    } else {
+      this._cardButton.classList.remove("button_alt-active");
+      this._cashButton.classList.remove("button_alt-active");
+    }
   }
 
-  protected onInputChange() {
-    this.emitChange();
+  set address(value: string) {
+    if (this._addressInput) {
+      this._addressInput.value = value;
+    }
   }
 
-  protected emitChange() {
-    const data: IOrderFormData = {
-      payment: this._cardButton.classList.contains("button_alt-active")
-        ? "online"
-        : this._cashButton.classList.contains("button_alt-active")
-          ? "offline"
-          : "",
-      address: this._addressInput.value || "",
-    };
-    this.container.dispatchEvent(new CustomEvent("change", { detail: data }));
+  set errors(value: string) {
+    if (this._errorsContainer) {
+      this._errorsContainer.textContent = value;
+    }
   }
 
   protected onSubmit() {
-    this.container.dispatchEvent(new CustomEvent("submit"));
-  }
-
-  getData(): IOrderFormData {
-    return {
-      payment: this._cardButton.classList.contains("button_alt-active")
-        ? "online"
-        : this._cashButton.classList.contains("button_alt-active")
-          ? "offline"
-          : "",
-      address: this._addressInput.value || "",
-    };
-  }
-
-  set valid(value: boolean) {
-    super.valid = value;
+    this.events.emit("order:submit");
   }
 }

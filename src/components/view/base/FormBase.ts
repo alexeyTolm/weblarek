@@ -1,4 +1,5 @@
 import { Component } from "../../base/Component";
+import { ensureElement } from "../../../utils/utils";
 
 export interface IFormState {
   valid: boolean;
@@ -13,8 +14,11 @@ export class FormBase<T> extends Component<T> {
   constructor(container: HTMLElement) {
     super(container);
     this._form = container as HTMLFormElement;
-    this._submitButton = container.querySelector('.button[type="submit"]')!;
-    this._errorsContainer = container.querySelector(".form__errors")!;
+    this._submitButton = ensureElement(
+      '.button[type="submit"]',
+      container,
+    ) as HTMLButtonElement;
+    this._errorsContainer = ensureElement(".form__errors", container);
 
     this._form.addEventListener("input", () => {
       this.onInputChange();
@@ -27,30 +31,18 @@ export class FormBase<T> extends Component<T> {
   }
 
   protected onInputChange(): void {
-
+    // будет переопределен в наследниках
   }
 
   protected onSubmit(): void {
-
+    // будет переопределен в наследниках
   }
 
   set valid(value: boolean) {
-    if (this._submitButton) {
-      this._submitButton.disabled = !value;
-    }
+    this._submitButton.disabled = !value;
   }
 
   set errors(value: string) {
-    if (this._errorsContainer) {
-      this._errorsContainer.textContent = value;
-    }
-  }
-
-  render(state?: Partial<T> & IFormState): HTMLElement {
-    if (state) {
-      this.valid = state.valid ?? true;
-      this.errors = state.errors?.join(", ") || "";
-    }
-    return super.render(state);
+    this._errorsContainer.textContent = value;
   }
 }
