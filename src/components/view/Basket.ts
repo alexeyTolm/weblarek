@@ -1,5 +1,6 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
+import { ensureElement } from "../../utils/utils";
 
 export interface IBasketView {
   items: HTMLElement[];
@@ -15,33 +16,31 @@ export class Basket extends Component<IBasketView> {
   constructor(container: HTMLElement, events: IEvents) {
     super(container);
     this.events = events;
-    this._list = container.querySelector(".basket__list")!;
-    this._total = container.querySelector(".basket__price")!;
-    this._button = container.querySelector(".basket__button")!;
+    this._list = ensureElement(".basket__list", container);
+    this._total = ensureElement(".basket__price", container);
+    this._button = ensureElement(
+      ".basket__button",
+      container,
+    ) as HTMLButtonElement;
 
-    if (this._button) {
-      this._button.addEventListener("click", () => {
-        this.events.emit("order:start");
-      });
-    }
+    this._button.addEventListener("click", () => {
+      this.events.emit("order:start");
+    });
   }
 
   set items(items: HTMLElement[]) {
-    if (this._list) {
-      this._list.replaceChildren(...items);
-    }
+    this._list.replaceChildren(...items);
   }
 
   set total(value: number) {
-    if (this._total) {
-      this._total.textContent = `${value} синапсов`;
-    }
+    this._total.textContent = `${value} синапсов`;
   }
 
   set disabled(value: boolean) {
-    if (this._button) {
-      this._button.disabled = value;
-    }
+    this._button.disabled = value;
   }
 
+  get element(): HTMLElement {
+    return this.container;
+  }
 }

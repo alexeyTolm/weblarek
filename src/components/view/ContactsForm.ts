@@ -1,5 +1,6 @@
 import { FormBase } from "./base/FormBase";
 import { IEvents } from "../base/Events";
+import { ensureElement } from "../../utils/utils";
 
 export interface IContactsFormData {
   email: string;
@@ -14,38 +15,34 @@ export class ContactsForm extends FormBase<IContactsFormData> {
   constructor(container: HTMLFormElement, events: IEvents) {
     super(container);
     this.events = events;
-    this._emailInput = container.querySelector('input[name="email"]')!;
-    this._phoneInput = container.querySelector('input[name="phone"]')!;
-    
-    this._emailInput.addEventListener("input", () => {
-      this.events.emit("contacts:emailChanged", {
-        email: this._emailInput.value,
-      });
-    });
+    this._emailInput = ensureElement(
+      'input[name="email"]',
+      container,
+    ) as HTMLInputElement;
+    this._phoneInput = ensureElement(
+      'input[name="phone"]',
+      container,
+    ) as HTMLInputElement;
+  }
 
-    this._phoneInput.addEventListener("input", () => {
-      this.events.emit("contacts:phoneChanged", {
-        phone: this._phoneInput.value,
-      });
+  protected onInputChange() {
+    this.events.emit("contacts:emailChanged", {
+      email: this._emailInput.value,
+    });
+    this.events.emit("contacts:phoneChanged", {
+      phone: this._phoneInput.value,
     });
   }
 
   set email(value: string) {
-    if (this._emailInput) {
+    if (this._emailInput.value !== value) {
       this._emailInput.value = value;
     }
   }
 
-  // Сеттер для телефона - только отображаем данные из модели
   set phone(value: string) {
-    if (this._phoneInput) {
+    if (this._phoneInput.value !== value) {
       this._phoneInput.value = value;
-    }
-  }
-
-  set errors(value: string) {
-    if (this._errorsContainer) {
-      this._errorsContainer.textContent = value;
     }
   }
 

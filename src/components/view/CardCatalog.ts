@@ -1,27 +1,32 @@
 import { CardBase, ICardActions } from "./base/CardBase";
-import { IProduct } from "../../types";
 import { categoryMap } from "../../utils/constants";
+import { ensureElement } from "../../utils/utils";
 
-export class CardCatalog extends CardBase {
+export interface ICardCatalog {
+  title: string;
+  price: number | null;
+  category: string;
+  image: string;
+}
+
+export class CardCatalog extends CardBase<ICardCatalog> {
   protected _category: HTMLElement;
   protected _image: HTMLImageElement;
 
   constructor(container: HTMLElement, actions?: ICardActions) {
     super(container, actions);
-    this._category = container.querySelector(".card__category")!;
-    this._image = container.querySelector(".card__image")!;
+    this._category = ensureElement(".card__category", container);
+    this._image = ensureElement(".card__image", container) as HTMLImageElement;
   }
 
   set category(value: string) {
-    if (this._category && value) {
+    if (value) {
       this._category.textContent = value;
 
-      // Удаляем все существующие модификаторы категорий
       Object.values(categoryMap).forEach((modifier) => {
         this._category.classList.remove(modifier);
       });
 
-      // Добавляем новый модификатор
       const modifier = categoryMap[value as keyof typeof categoryMap];
       if (modifier) {
         this._category.classList.add(modifier);
@@ -30,17 +35,9 @@ export class CardCatalog extends CardBase {
   }
 
   set image(value: string) {
-    if (this._image && value) {
+    if (value) {
       this._image.src = value;
       this._image.alt = this._title?.textContent || "Товар";
     }
-  }
-
-  render(product: IProduct): HTMLElement {
-    this.title = product.title;
-    this.price = product.price;
-    this.category = product.category;
-    this.image = product.image;
-    return this.container;
   }
 }

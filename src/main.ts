@@ -9,6 +9,7 @@ import { cloneTemplate, ensureElement } from "./utils/utils";
 import { Page } from "./components/view/Page";
 import { Modal } from "./components/view/Modal";
 import { Basket } from "./components/view/Basket";
+import { Gallery } from "./components/view/Gallery";
 import { CardCatalog } from "./components/view/CardCatalog";
 import { CardPreview } from "./components/view/CardPreview";
 import { CardBasket } from "./components/view/CardBasket";
@@ -28,8 +29,12 @@ const userModel = new UserData(events);
 
 
 // Page
-const pageContainer = ensureElement(".page__wrapper");
+const pageContainer = ensureElement(".page__content");
 const page = new Page(pageContainer, events);
+
+// Gallery - для отображения карточек
+const galleryContainer = ensureElement(".page__content");
+const gallery = new Gallery(galleryContainer);
 
 // Modal
 const modalContainer = ensureElement("#modal-container");
@@ -63,15 +68,9 @@ const successTemplate = ensureElement("#success") as HTMLTemplateElement;
 const successElement = cloneTemplate(successTemplate);
 const success = new Success(successElement, events);
 
-// Хранилище для текущего товара в превью
-let currentPreviewProduct: IProduct | null = null;
-
-// Флаг для предотвращения множественных отправок
-let isOrderProcessing = false;
-
-
 // Обновление каталога товаров
-events.on("products:changed", (products: IProduct[]) => {
+events.on("products:changed", () => {
+  const products = productModel.getProducts();
   const cardCatalogTemplate = ensureElement(
     "#card-catalog",
   ) as HTMLTemplateElement;
@@ -84,10 +83,12 @@ events.on("products:changed", (products: IProduct[]) => {
     card.render(product);
     return cardElement;
   });
-  page.render({ counter: basketModel.getCounter(), items: cards });
+
+  page.counter = basketModel.getCounter();
+  gallery.items = cards;
 });
 
-// Обновление счётчика корзины и содержимого корзины
+// Обновление корзины
 events.on("basket:changed", () => {
   page.counter = basketModel.getCounter();
 
@@ -95,33 +96,32 @@ events.on("basket:changed", () => {
     "#card-basket",
   ) as HTMLTemplateElement;
 
-  let basketItems: HTMLElement[];
-
-  if (basketModel.getItems().length === 0) {
-    const emptyMessage = document.createElement("p");
-    emptyMessage.textContent = "Корзина пуста";
-    emptyMessage.style.textAlign = "center";
-    emptyMessage.style.padding = "20px";
-    basketItems = [emptyMessage];
-  } else {
-    basketItems = basketModel.getItems().map((item, index) => {
-      const cardElement = cloneTemplate(cardBasketTemplate);
-      const card = new CardBasket(cardElement, {
-        onClick: () => events.emit("basket:remove", { id: item.id }),
-      });
-      card.render({ ...item, index: index + 1 });
-      return cardElement;
+  const basketItems = basketModel.getItems().map((item, index) => {
+    const cardElement = cloneTemplate(cardBasketTemplate);
+    const card = new CardBasket(cardElement, {
+      onClick: () => events.emit("basket:remove", { id: item.id }),
     });
-  }
+    card.render({ ...item, index: index + 1 });
+    return cardElement;
+  });
 
   basketComponent.items = basketItems;
   basketComponent.total = basketModel.getTotalPrice();
   basketComponent.disabled = basketModel.getItems().length === 0;
 });
 
+events.on("user:changed", () => {
+  const errors = userModel.validateUserData();
+  orderForm.valid = !errors.payment && !errors.address;
+  orderForm.errors = errors.payment || errors.address || "";
+  contactsForm.valid = !errors.email && !errors.phone;
+  contactsForm.errors = errors.email || errors.phone || "";
+});
+
 // Обновление превью товара
-events.on("preview:changed", (product: IProduct) => {
-  currentPreviewProduct = product;
+events.on("preview:changed", () => {
+  const product = productModel.getPreview();
+  if (!product) return;
 
   const inBasket = basketModel.inBasket(product.id);
   const isPriceNull = product.price === null;
@@ -143,7 +143,7 @@ events.on("preview:changed", (product: IProduct) => {
     buttonDisabled,
   });
 
-  modal.render({ content: cardPreview.element });
+  modal.render({ content: cardPreview.render() });
 });
 
 
@@ -154,13 +154,14 @@ events.on("card:select", (product: IProduct) => {
 
 // Клик по кнопке в превью
 events.on("preview:buttonClick", () => {
-  if (!currentPreviewProduct) return;
-  if (currentPreviewProduct.price === null) return;
+  const product = productModel.getPreview();
+  if (!product) return;
+  if (product.price === null) return;
 
-  if (basketModel.inBasket(currentPreviewProduct.id)) {
-    basketModel.removeItem(currentPreviewProduct.id);
+  if (basketModel.inBasket(product.id)) {
+    basketModel.removeItem(product.id);
   } else {
-    basketModel.addItem(currentPreviewProduct);
+    basketModel.addItem(product);
   }
   modal.close();
 });
@@ -172,7 +173,7 @@ events.on("basket:remove", (data: { id: string }) => {
 
 // Открытие корзины
 events.on("basket:open", () => {
-  modal.render({ content: basketComponent.element });
+  modal.render({ content: basketComponent.render() });
 });
 
 // Начало оформления заказа
@@ -180,28 +181,18 @@ events.on("order:start", () => {
   const userData = userModel.getUserData();
   orderForm.payment = userData.payment;
   orderForm.address = userData.address;
-  modal.render({ content: orderForm.element });
+  modal.render({ content: orderForm.render() });
 });
+
 
 // Изменение способа оплаты
 events.on("order:paymentSelected", (data: { payment: string }) => {
   userModel.setUserData("payment", data.payment);
-  const userData = userModel.getUserData();
-  orderForm.payment = userData.payment;
-  orderForm.address = userData.address;
-  const errors = userModel.validateUserData();
-  orderForm.valid = !errors.payment && !errors.address;
-  orderForm.errors = errors.payment || errors.address || "";
 });
 
+// Изменение адреса
 events.on("order:addressChanged", (data: { address: string }) => {
   userModel.setUserData("address", data.address);
-  const userData = userModel.getUserData();
-  orderForm.payment = userData.payment;
-  orderForm.address = userData.address;
-  const errors = userModel.validateUserData();
-  orderForm.valid = !errors.payment && !errors.address;
-  orderForm.errors = errors.payment || errors.address || "";
 });
 
 // Отправка формы заказа
@@ -209,38 +200,21 @@ events.on("order:submit", () => {
   const userData = userModel.getUserData();
   contactsForm.email = userData.email;
   contactsForm.phone = userData.phone;
-  modal.render({ content: contactsForm.element });
+  modal.render({ content: contactsForm.render() });
 });
 
 // Изменение email
 events.on("contacts:emailChanged", (data: { email: string }) => {
   userModel.setUserData("email", data.email);
-  const userData = userModel.getUserData();
-  contactsForm.email = userData.email;
-  contactsForm.phone = userData.phone;
-  const errors = userModel.validateUserData();
-  contactsForm.valid = !errors.email && !errors.phone;
-  contactsForm.errors = errors.email || errors.phone || "";
 });
 
 // Изменение телефона
 events.on("contacts:phoneChanged", (data: { phone: string }) => {
   userModel.setUserData("phone", data.phone);
-  const userData = userModel.getUserData();
-  contactsForm.email = userData.email;
-  contactsForm.phone = userData.phone;
-  const errors = userModel.validateUserData();
-  contactsForm.valid = !errors.email && !errors.phone;
-  contactsForm.errors = errors.email || errors.phone || "";
 });
 
 // Отправка формы контактов
 events.on("contacts:submit", async () => {
-  if (isOrderProcessing) return;
-  if (basketModel.getItems().length === 0) return;
-
-  isOrderProcessing = true;
-
   const order: IOrder = {
     ...userModel.getUserData(),
     items: basketModel.getItems().map((item) => item.id),
@@ -252,13 +226,9 @@ events.on("contacts:submit", async () => {
     basketModel.clearBasket();
     userModel.clearUserData();
     success.total = result.total;
-    modal.render({ content: success.element });
+    modal.render({ content: success.render() });
   } catch (error) {
     console.error("Ошибка при оформлении заказа:", error);
-  } finally {
-    setTimeout(() => {
-      isOrderProcessing = false;
-    }, 1000);
   }
 });
 

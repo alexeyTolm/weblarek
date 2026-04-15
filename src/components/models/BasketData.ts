@@ -16,17 +16,17 @@ export class BasketData {
 
   addItem(item: IProduct) {
     this.items.push(item);
-    this.events.emit("basket:changed", this.items);
+    this.events.emit("basket:changed");
   }
 
   removeItem(id: string) {
     this.items = this.items.filter((item) => item.id !== id);
-    this.events.emit("basket:changed", this.items);
+    this.events.emit("basket:changed");
   }
 
   clearBasket(): void {
     this.items = [];
-    this.events.emit("basket:changed", this.items);
+    this.events.emit("basket:changed");
   }
 
   getTotalPrice(): number {

@@ -1,5 +1,6 @@
 import { FormBase } from "./base/FormBase";
 import { IEvents } from "../base/Events";
+import { ensureElement } from "../../utils/utils";
 
 export interface IOrderFormData {
   payment: string;
@@ -15,9 +16,18 @@ export class OrderForm extends FormBase<IOrderFormData> {
   constructor(container: HTMLFormElement, events: IEvents) {
     super(container);
     this.events = events;
-    this._cardButton = container.querySelector('button[name="card"]')!;
-    this._cashButton = container.querySelector('button[name="cash"]')!;
-    this._addressInput = container.querySelector('input[name="address"]')!;
+    this._cardButton = ensureElement(
+      'button[name="card"]',
+      container,
+    ) as HTMLButtonElement;
+    this._cashButton = ensureElement(
+      'button[name="cash"]',
+      container,
+    ) as HTMLButtonElement;
+    this._addressInput = ensureElement(
+      'input[name="address"]',
+      container,
+    ) as HTMLInputElement;
 
     this._cardButton.addEventListener("click", () => {
       this.events.emit("order:paymentSelected", { payment: "online" });
@@ -26,11 +36,11 @@ export class OrderForm extends FormBase<IOrderFormData> {
     this._cashButton.addEventListener("click", () => {
       this.events.emit("order:paymentSelected", { payment: "offline" });
     });
+  }
 
-    this._addressInput.addEventListener("input", () => {
-      this.events.emit("order:addressChanged", {
-        address: this._addressInput.value,
-      });
+  protected onInputChange() {
+    this.events.emit("order:addressChanged", {
+      address: this._addressInput.value,
     });
   }
 
@@ -48,15 +58,7 @@ export class OrderForm extends FormBase<IOrderFormData> {
   }
 
   set address(value: string) {
-    if (this._addressInput) {
-      this._addressInput.value = value;
-    }
-  }
-
-  set errors(value: string) {
-    if (this._errorsContainer) {
-      this._errorsContainer.textContent = value;
-    }
+    this._addressInput.value = value;
   }
 
   protected onSubmit() {

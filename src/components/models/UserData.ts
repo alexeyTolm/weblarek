@@ -21,7 +21,7 @@ export class UserData {
     } else {
       (this as any)[field] = value;
     }
-    this.events.emit("user:changed", this.getUserData());
+    this.events.emit("user:changed");
   }
 
   getUserData(): IBuyer {
@@ -38,7 +38,7 @@ export class UserData {
     this.address = "";
     this.email = "";
     this.phone = "";
-    this.events.emit("user:changed", this.getUserData());
+    this.events.emit("user:changed");
   }
 
   validateUserData(): TFormErrors {

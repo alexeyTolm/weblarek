@@ -1,10 +1,6 @@
 export abstract class Component<T> {
   protected constructor(protected readonly container: HTMLElement) {}
 
-  get element(): HTMLElement {
-    return this.container;
-  }
-
   protected setImage(element: HTMLImageElement, src: string, alt?: string) {
     if (element) {
       element.src = src;

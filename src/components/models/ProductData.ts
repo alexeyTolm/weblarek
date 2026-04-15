@@ -12,7 +12,7 @@ export class ProductData {
 
   setProducts(items: IProduct[]): void {
     this._products = items;
-    this.events.emit("products:changed", this._products);
+    this.events.emit("products:changed");
   }
 
   getProducts(): IProduct[] {
@@ -25,7 +25,7 @@ export class ProductData {
 
   setPreview(item: IProduct): void {
     this._preview = item;
-    this.events.emit("preview:changed", this._preview);
+    this.events.emit("preview:changed");
   }
 
   getPreview(): IProduct | null {

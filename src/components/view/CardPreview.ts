@@ -1,8 +1,18 @@
 import { CardBase, ICardActions } from "./base/CardBase";
-import { IProduct } from "../../types";
 import { categoryMap } from "../../utils/constants";
+import { ensureElement } from "../../utils/utils";
 
-export class CardPreview extends CardBase {
+export interface ICardPreview {
+  title: string;
+  price: number | null;
+  category: string;
+  image: string;
+  description: string;
+  buttonText: string;
+  buttonDisabled: boolean;
+}
+
+export class CardPreview extends CardBase<ICardPreview> {
   protected _category: HTMLElement;
   protected _image: HTMLImageElement;
   protected _description: HTMLElement;
@@ -10,24 +20,24 @@ export class CardPreview extends CardBase {
 
   constructor(container: HTMLElement, actions?: ICardActions) {
     super(container, actions);
-    this._category = container.querySelector(".card__category")!;
-    this._image = container.querySelector(".card__image")!;
-    this._description = container.querySelector(".card__text")!;
-    this._button = container.querySelector(".card__button")!;
+    this._category = ensureElement(".card__category", container);
+    this._image = ensureElement(".card__image", container) as HTMLImageElement;
+    this._description = ensureElement(".card__text", container);
+    this._button = ensureElement(
+      ".card__button",
+      container,
+    ) as HTMLButtonElement;
 
-    // Устанавливаем слушатель на кнопку
-    if (this._button) {
-      this._button.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (actions?.onClick) {
-          actions.onClick(e);
-        }
-      });
-    }
+    this._button.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (actions?.onClick) {
+        actions.onClick(e);
+      }
+    });
   }
 
   set category(value: string) {
-    if (this._category && value) {
+    if (value) {
       this._category.textContent = value;
 
       Object.values(categoryMap).forEach((modifier) => {
@@ -42,42 +52,22 @@ export class CardPreview extends CardBase {
   }
 
   set image(value: string) {
-    if (this._image && value) {
+    if (value) {
       this._image.src = value;
       this._image.alt = this._title?.textContent || "Товар";
     }
   }
 
   set description(value: string) {
-    if (this._description) this._description.textContent = value;
+    this._description.textContent = value;
   }
 
   set buttonText(value: string) {
-    if (this._button) {
-      this._button.textContent = value;
-    }
+    this._button.textContent = value;
   }
 
   set buttonDisabled(value: boolean) {
-    if (this._button) {
-      this._button.disabled = value;
-    }
+    this._button.disabled = value;
   }
 
-  render(
-    product: IProduct & { buttonText?: string; buttonDisabled?: boolean },
-  ): HTMLElement {
-    this.title = product.title;
-    this.price = product.price;
-    this.category = product.category;
-    this.image = product.image;
-    this.description = product.description;
-    if (product.buttonText !== undefined) {
-      this.buttonText = product.buttonText;
-    }
-    if (product.buttonDisabled !== undefined) {
-      this.buttonDisabled = product.buttonDisabled;
-    }
-    return this.container;
-  }
 }
