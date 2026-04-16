@@ -30,27 +30,37 @@ export class OrderForm extends FormBase<IOrderFormData> {
     ) as HTMLInputElement;
 
     this._cardButton.addEventListener("click", () => {
+      this.setPaymentActive("online");
       this.events.emit("order:paymentSelected", { payment: "online" });
     });
 
     this._cashButton.addEventListener("click", () => {
+      this.setPaymentActive("offline");
       this.events.emit("order:paymentSelected", { payment: "offline" });
+    });
+
+    this._addressInput.addEventListener("input", () => {
+      this.events.emit("order:addressChanged", {
+        address: this._addressInput.value,
+      });
     });
   }
 
-  protected onInputChange() {
-    this.events.emit("order:addressChanged", {
-      address: this._addressInput.value,
-    });
+  private setPaymentActive(type: "online" | "offline") {
+    if (type === "online") {
+      this._cardButton.classList.add("button_alt-active");
+      this._cashButton.classList.remove("button_alt-active");
+    } else {
+      this._cashButton.classList.add("button_alt-active");
+      this._cardButton.classList.remove("button_alt-active");
+    }
   }
 
   set payment(value: string) {
     if (value === "online") {
-      this._cardButton.classList.add("button_alt-active");
-      this._cashButton.classList.remove("button_alt-active");
+      this.setPaymentActive("online");
     } else if (value === "offline") {
-      this._cashButton.classList.add("button_alt-active");
-      this._cardButton.classList.remove("button_alt-active");
+      this.setPaymentActive("offline");
     } else {
       this._cardButton.classList.remove("button_alt-active");
       this._cashButton.classList.remove("button_alt-active");

@@ -1,9 +1,7 @@
-import { CardBase, ICardActions } from "./base/CardBase";
+import { CardBase, ICardBase } from "./base/CardBase";
 import { ensureElement } from "../../utils/utils";
 
-export interface ICardBasket {
-  title: string;
-  price: number | null;
+export interface ICardBasket extends ICardBase {
   index: number;
 }
 
@@ -11,18 +9,20 @@ export class CardBasket extends CardBase<ICardBasket> {
   protected _index: HTMLElement;
   protected _deleteButton: HTMLButtonElement;
 
-  constructor(container: HTMLElement, actions?: ICardActions) {
-    super(container, actions);
+  constructor(container: HTMLElement, onDelete?: () => void) {
+    super(container);
     this._index = ensureElement(".basket__item-index", container);
     this._deleteButton = ensureElement(
       ".basket__item-delete",
       container,
     ) as HTMLButtonElement;
 
-    this._deleteButton.addEventListener("click", (e) => {
-      e.stopPropagation();
-      actions?.onClick?.(e);
-    });
+    if (onDelete) {
+      this._deleteButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onDelete();
+      });
+    }
   }
 
   set index(value: number) {

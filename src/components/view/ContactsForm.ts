@@ -23,27 +23,26 @@ export class ContactsForm extends FormBase<IContactsFormData> {
       'input[name="phone"]',
       container,
     ) as HTMLInputElement;
-  }
 
-  protected onInputChange() {
-    this.events.emit("contacts:emailChanged", {
-      email: this._emailInput.value,
+    this._emailInput.addEventListener("input", () => {
+      this.events.emit("contacts:emailChanged", {
+        email: this._emailInput.value,
+      });
     });
-    this.events.emit("contacts:phoneChanged", {
-      phone: this._phoneInput.value,
+
+    this._phoneInput.addEventListener("input", () => {
+      this.events.emit("contacts:phoneChanged", {
+        phone: this._phoneInput.value,
+      });
     });
   }
 
   set email(value: string) {
-    if (this._emailInput.value !== value) {
-      this._emailInput.value = value;
-    }
+    this._emailInput.value = value;
   }
 
   set phone(value: string) {
-    if (this._phoneInput.value !== value) {
-      this._phoneInput.value = value;
-    }
+    this._phoneInput.value = value;
   }
 
   protected onSubmit() {

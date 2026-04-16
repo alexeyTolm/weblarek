@@ -1,10 +1,8 @@
-import { CardBase, ICardActions } from "./base/CardBase";
+import { CardBase, ICardBase } from "./base/CardBase";
 import { categoryMap } from "../../utils/constants";
 import { ensureElement } from "../../utils/utils";
 
-export interface ICardCatalog {
-  title: string;
-  price: number | null;
+export interface ICardCatalog extends ICardBase {
   category: string;
   image: string;
 }
@@ -13,10 +11,14 @@ export class CardCatalog extends CardBase<ICardCatalog> {
   protected _category: HTMLElement;
   protected _image: HTMLImageElement;
 
-  constructor(container: HTMLElement, actions?: ICardActions) {
-    super(container, actions);
+  constructor(container: HTMLElement, onClick?: () => void) {
+    super(container);
     this._category = ensureElement(".card__category", container);
     this._image = ensureElement(".card__image", container) as HTMLImageElement;
+
+    if (onClick) {
+      container.addEventListener("click", onClick);
+    }
   }
 
   set category(value: string) {

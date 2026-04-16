@@ -1,10 +1,8 @@
-import { CardBase, ICardActions } from "./base/CardBase";
+import { CardBase, ICardBase } from "./base/CardBase";
 import { categoryMap } from "../../utils/constants";
 import { ensureElement } from "../../utils/utils";
 
-export interface ICardPreview {
-  title: string;
-  price: number | null;
+export interface ICardPreview extends ICardBase {
   category: string;
   image: string;
   description: string;
@@ -18,8 +16,8 @@ export class CardPreview extends CardBase<ICardPreview> {
   protected _description: HTMLElement;
   protected _button: HTMLButtonElement;
 
-  constructor(container: HTMLElement, actions?: ICardActions) {
-    super(container, actions);
+  constructor(container: HTMLElement, onButtonClick?: () => void) {
+    super(container);
     this._category = ensureElement(".card__category", container);
     this._image = ensureElement(".card__image", container) as HTMLImageElement;
     this._description = ensureElement(".card__text", container);
@@ -28,12 +26,12 @@ export class CardPreview extends CardBase<ICardPreview> {
       container,
     ) as HTMLButtonElement;
 
-    this._button.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (actions?.onClick) {
-        actions.onClick(e);
-      }
-    });
+    if (onButtonClick) {
+      this._button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onButtonClick();
+      });
+    }
   }
 
   set category(value: string) {
@@ -69,5 +67,4 @@ export class CardPreview extends CardBase<ICardPreview> {
   set buttonDisabled(value: boolean) {
     this._button.disabled = value;
   }
-
 }

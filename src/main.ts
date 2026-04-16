@@ -28,13 +28,12 @@ const basketModel = new BasketData(events);
 const userModel = new UserData(events);
 
 
-// Page
+// Page - для хедера
 const pageContainer = ensureElement(".page__content");
 const page = new Page(pageContainer, events);
 
 // Gallery - для отображения карточек
-const galleryContainer = ensureElement(".page__content");
-const gallery = new Gallery(galleryContainer);
+const gallery = new Gallery(pageContainer);
 
 // Modal
 const modalContainer = ensureElement("#modal-container");
@@ -49,9 +48,9 @@ const cardPreviewTemplate = ensureElement(
   "#card-preview",
 ) as HTMLTemplateElement;
 const cardPreviewElement = cloneTemplate(cardPreviewTemplate);
-const cardPreview = new CardPreview(cardPreviewElement, {
-  onClick: () => events.emit("preview:buttonClick"),
-});
+const cardPreview = new CardPreview(cardPreviewElement, () =>
+  events.emit("preview:buttonClick"),
+);
 
 // OrderForm
 const orderTemplate = ensureElement("#order") as HTMLTemplateElement;
@@ -77,9 +76,9 @@ events.on("products:changed", () => {
 
   const cards = products.map((product) => {
     const cardElement = cloneTemplate(cardCatalogTemplate);
-    const card = new CardCatalog(cardElement, {
-      onClick: () => events.emit("card:select", product),
-    });
+    const card = new CardCatalog(cardElement, () =>
+      events.emit("card:select", product),
+    );
     card.render(product);
     return cardElement;
   });
@@ -98,9 +97,9 @@ events.on("basket:changed", () => {
 
   const basketItems = basketModel.getItems().map((item, index) => {
     const cardElement = cloneTemplate(cardBasketTemplate);
-    const card = new CardBasket(cardElement, {
-      onClick: () => events.emit("basket:remove", { id: item.id }),
-    });
+    const card = new CardBasket(cardElement, () =>
+      events.emit("basket:remove", { id: item.id }),
+    );
     card.render({ ...item, index: index + 1 });
     return cardElement;
   });
@@ -110,6 +109,7 @@ events.on("basket:changed", () => {
   basketComponent.disabled = basketModel.getItems().length === 0;
 });
 
+// Обновление форм при изменении данных пользователя
 events.on("user:changed", () => {
   const errors = userModel.validateUserData();
   orderForm.valid = !errors.payment && !errors.address;

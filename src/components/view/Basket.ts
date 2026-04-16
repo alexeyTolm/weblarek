@@ -39,8 +39,4 @@ export class Basket extends Component<IBasketView> {
   set disabled(value: boolean) {
     this._button.disabled = value;
   }
-
-  get element(): HTMLElement {
-    return this.container;
-  }
 }
